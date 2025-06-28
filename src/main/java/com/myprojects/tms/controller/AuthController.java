@@ -1,6 +1,6 @@
 package com.myprojects.tms.controller;
 
-import com.myprojects.tms.model.Login;
+import com.myprojects.tms.model.Token;
 import com.myprojects.tms.model.User;
 import com.myprojects.tms.repository.UserRepository;
 import com.myprojects.tms.security.JwtUtil;
@@ -20,9 +20,9 @@ import java.util.Map;
 @Slf4j
 @RequestMapping("/auth")
 public class AuthController {
-    private JwtUtil jwtUtil;
-    private UserRepository userRepository;
-    private BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public AuthController(JwtUtil jwtUtil, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.jwtUtil = jwtUtil;
@@ -34,12 +34,15 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> singUp(@RequestBody User user){
+        log.info("start of /signup");
         if(userRepository.findByEmail(user.getEmail()).isPresent()){
             return ResponseEntity.badRequest().body("User is already present!");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
+        log.info("end of /signup");
         return ResponseEntity.ok("User is created successfully");
+
     }
 
     @PostMapping("/login")
@@ -53,5 +56,16 @@ public class AuthController {
         String token = jwtUtil.generateToken(user.getEmail());
         log.info("token generated");
         return ResponseEntity.ok(Map.of("token", token));
+    }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestBody Token token){
+        log.info("start of /validate-token");
+        if((token.getToken().isEmpty() || token.getToken() == null)){
+            return ResponseEntity.status(400).body("Token field is empty or blank");
+        }
+        Boolean validate = jwtUtil.validateToken(token.getToken());
+        log.info("end of /validate-token");
+        return ResponseEntity.ok(Map.of("isValid", validate));
     }
 }
