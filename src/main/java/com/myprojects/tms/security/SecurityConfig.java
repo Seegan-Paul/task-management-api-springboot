@@ -23,7 +23,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/signup").permitAll() // Allow login without authentication
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/validate-token").permitAll() // Allow login without authentication
                         .anyRequest().authenticated())
 //                .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session
